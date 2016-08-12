@@ -61,7 +61,7 @@ public class Main {
 
         ArrayList<String> loopList = new ArrayList<>(arrayList);
         System.out.println("Loop: " + replaceWithLoop(loopList));
-햣
+
         ArrayList<String> replaceAllList = new ArrayList<>(arrayList);
         System.out.println("replaceAll: " + replaceAllMethod(replaceAllList));
     }
