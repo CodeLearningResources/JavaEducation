@@ -7,28 +7,28 @@ import java.util.*;
  */
 public class Main {
 
-    public static Iterator<String> replaceWithIterator(ArrayList<String> list) {
+    public static void replaceWithIterator(ArrayList<String> list) {
         // Ch 7.2 (a) With a iterator
-        Iterator<String> iterator = list.iterator();
-        iterator.forEachRemaining(String::toUpperCase);
-
-        return iterator;
+        ListIterator<String> iterator = list.listIterator();
+        while (iterator.hasNext()) {
+            String upperCase = iterator.next().toUpperCase();
+            iterator.previous();
+            iterator.set(upperCase);
+            iterator.next();
+        }
     }
 
-    public static ArrayList<String> replaceWithLoop(ArrayList<String> list) {
+    public static void replaceWithLoop(ArrayList<String> list) {
         // Ch 7.2 (b). With a loop over index values
         int len = list.size();
         for (int i = 0; i < len; i++) {
             list.set(i, list.get(i).toUpperCase());
         }
-
-        return new ArrayList<>(list);
     }
 
-    public static ArrayList<String> replaceAllMethod(ArrayList<String> list) {
+    public static void replaceAllMethod(ArrayList<String> list) {
         // Ch 7.2 (c). With the replaceAll method
         list.replaceAll(String::toUpperCase);
-        return new ArrayList<>(list);
     }
 
     public static <T> Set<T> unionSet(Set<T> set1, Set<T> set2) {
@@ -53,19 +53,18 @@ public class Main {
         return difference;
     }
 
-    public static List<String> shuffle(String input) {
+    public static List<String> shuffle(List<String> input) {
         /*
         Ch 7.11
         Return a list with items shuffled except the first and the last.
         */
         if (input == null) throw new NullPointerException("Input is null.");
-        else if (input.length() == 0) return new ArrayList<>();
+        else if (input.size() == 0) return new ArrayList<>(input);
         else {
-            List<String> list = Arrays.asList(input.split(" "));
             // Shuffle only when there are 2 or more words.
-            if (list.size() >= 2) Collections.shuffle(list.subList(1, list.size() - 1));
+            if (input.size() >= 2) Collections.shuffle(input.subList(1, input.size() - 1));
 
-            return new ArrayList<>(list);
+            return new ArrayList<>(input);
         }
     }
 
@@ -78,8 +77,8 @@ public class Main {
 
             @Override
             public int indexOf(Object o) {
-                if (o == null) return -1;       // Return -1 if object o is null
-                if (!(o instanceof Integer)) throw new IllegalArgumentException("Index must be an Integer!");
+                if (o == null) throw new NullPointerException("Invalid index is given!");
+                if (!(o instanceof Integer)) return -1;
                 else if ((Integer) o < 0 || (Integer) o >= size())
                     throw new IndexOutOfBoundsException("Invalid Index given!");
                 else return (Integer) o;
@@ -103,7 +102,7 @@ public class Main {
 
             @Override
             public boolean contains(Object o) {
-                return o != null && (Integer) o < size() && (Integer) o >= 0;
+                return o != null && (o instanceof Integer) && (Integer) o < size() && (Integer) o >= 0;
             }
         };
     }
@@ -114,15 +113,19 @@ public class Main {
         System.out.println("Original arrayList: " + arrayList);
 
         ArrayList<String> iteratorList = new ArrayList<>(arrayList);
-        System.out.println("Iterator: " + replaceWithIterator(iteratorList));
+        replaceWithIterator(iteratorList);
+        System.out.println("Iterator: " + iteratorList);
 
         ArrayList<String> loopList = new ArrayList<>(arrayList);
-        System.out.println("Loop: " + replaceWithLoop(loopList));
+        replaceWithLoop(loopList);
+        System.out.println("Loop: " + loopList);
 
         ArrayList<String> replaceAllList = new ArrayList<>(arrayList);
-        System.out.println("replaceAll: " + replaceAllMethod(replaceAllList));
+        replaceAllMethod(replaceAllList);
+        System.out.println("replaceAll: " + replaceAllList);
 
-        System.out.println("Shuffle: " + shuffle("aaa ccc asdf bbb"));
+        String[] q = {"asdf", "ccc", "asd", "bbb"};
+        System.out.println("Shuffle: " + shuffle(Arrays.asList(q)));
         List<Integer> aa = getNumbers(10);
        Integer a = aa.get(0);
         System.out.println(a);
@@ -135,6 +138,6 @@ public class Main {
         System.out.println("Intersection: " + differenceSet(s1, s2));
 
         List<Integer> b = getNumbers(10);
-        System.out.println("abstract: " + b.contains(-100));
+        System.out.println("abstract: " + b.contains(1));
     }
 }
