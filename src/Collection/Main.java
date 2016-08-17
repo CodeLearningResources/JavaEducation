@@ -103,7 +103,7 @@ public class Main {
 
             @Override
             public boolean contains(Object o) {
-                return o != null && (Integer) o < size();
+                return o != null && (Integer) o < size() && (Integer) o >= 0;
             }
         };
     }
@@ -135,6 +135,6 @@ public class Main {
         System.out.println("Intersection: " + differenceSet(s1, s2));
 
         List<Integer> b = getNumbers(10);
-        System.out.println("abstract: " + b.contains(null));
+        System.out.println("abstract: " + b.contains(-100));
     }
 }
