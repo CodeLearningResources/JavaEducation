@@ -11,10 +11,7 @@ public class Main {
         // Ch 7.2 (a) With a iterator
         ListIterator<String> iterator = list.listIterator();
         while (iterator.hasNext()) {
-            String upperCase = iterator.next().toUpperCase();
-            iterator.previous();
-            iterator.set(upperCase);
-            iterator.next();
+            iterator.set(iterator.next().toUpperCase());
         }
     }
 
@@ -61,8 +58,8 @@ public class Main {
         if (input == null) throw new NullPointerException("Input is null.");
         else if (input.size() == 0) return new ArrayList<>(input);
         else {
-            // Shuffle only when there are 2 or more words.
-            if (input.size() >= 2) Collections.shuffle(input.subList(1, input.size() - 1));
+            // Shuffle only when there are more than 2 words.
+            if (input.size() > 2) Collections.shuffle(input.subList(1, input.size() - 1));
 
             return new ArrayList<>(input);
         }
@@ -102,7 +99,7 @@ public class Main {
 
             @Override
             public boolean contains(Object o) {
-                return o != null && (o instanceof Integer) && (Integer) o < size() && (Integer) o >= 0;
+                return (o instanceof Integer) && (Integer) o < size() && (Integer) o >= 0;
             }
         };
     }

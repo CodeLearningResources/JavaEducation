@@ -6,7 +6,7 @@ import java.util.function.Function;
 /**
  * Created by mikim on 2016-08-01.
  */
-public class Arrays {
+public class  Arrays {
     public static <T extends Comparable<? super T>> T min(T[] array) {  // Ch 6.10 min method
         isValidArray(array);                        // Check whether array is valid
         int index = firstNonNullIndex(array);       // Check array has null in it
@@ -39,6 +39,7 @@ public class Arrays {
 
     private static  <T> void isValidArray(T[] array) throws NullPointerException, IllegalArgumentException {
         // Check whether array is null
+
         if (array == null) throw new NullPointerException("Cannot handle null array!");
 
         // Check array is empty
