@@ -1,10 +1,6 @@
 package InputAndOutput;
 
-import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -53,7 +49,6 @@ public class InputOutputMain {
                 }
                 lineCounter.incrementAndGet();
             });
-            map.forEach((k,v) -> System.out.println("Key: " + k + ". line number: " + v));
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -72,6 +67,18 @@ public class InputOutputMain {
         return newFile;
     }
 
+    private static void printFile(File file) {
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                System.out.println(line);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static ArrayList<Integer> extractAllIntegers1(String input) {
         /*
             Ch 9. 10 (a)
@@ -83,8 +90,7 @@ public class InputOutputMain {
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(input);
         while (matcher.find()) {
-            String match = matcher.group();
-            list.add(Integer.parseInt(match));
+            list.add(Integer.parseInt(matcher.group()));
         }
         return list;
     }
@@ -98,21 +104,30 @@ public class InputOutputMain {
         int len = tokens.length;
         ArrayList<Integer> list = new ArrayList<>(len);
 
+        String regex = "[-+]?\\d+";
+        Pattern pattern = Pattern.compile(regex);
         for (int i = 0; i < len; i++) {
-            list.add(Integer.parseInt(tokens[i]));
+            Matcher matcher = pattern.matcher(tokens[i]);
+            if (matcher.find()) {
+                list.add(Integer.parseInt(matcher.group()));
+            }
         }
         return list;
     }
 
     public static void main(String[] args) throws FileNotFoundException {
         File file = new File("C:\\Users\\mikim\\IdeaProjects\\Java_Education\\test.txt");
-        File f1 = produceTocFile(file, " ");
+        System.out.println("Text file is: ");
+        printFile(file);
+        File newFile = produceTocFile(file, " ");
+        System.out.println("\nResult file is: ");
+        printFile(newFile);
 
-        String input = "1234adsfa-342 2342. -323/323.0 -231dfa23424// -324";
+
+        String input = "+1234adsfa-3422+342. -323/+323.0 -231dfa23424// -324 -+ - +";
+        System.out.println("\nString input is: '" + input + "'");
         System.out.println("Extract all decimal Integers with find(): " +
                 extractAllIntegers1(input));
         System.out.println("Extract all decimal Integers with split(): " + extractAllIntegers2(input));
-
-
     }
 }
