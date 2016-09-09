@@ -6,7 +6,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 public class InputOutputMain {
 
 
-    public static File produceTocFile(File file, String delimiter) throws FileNotFoundException {
+    public static File produceTocFile(File file) throws FileNotFoundException {
         /*
         Ch 9.2
         Read a text File file and produces a file with same name but extension .toc,
@@ -28,13 +28,18 @@ public class InputOutputMain {
             throw new FileNotFoundException("Input file is not valid!");
         }
 
-        TreeMap<String, Integer> map = new TreeMap<>();
-        final AtomicInteger lineCounter = new AtomicInteger(1);
+        TreeMap<String, Set<Integer>> map = new TreeMap<>();
+
+
+        LongAdder lineCounter = new LongAdder();
+        lineCounter.increment();    // First line is line1
         File newFile = null;
 
         Path filePath = file.toPath();
-        int fileWithExtensionLength = filePath.getFileName().toString().length();
-        String fileName = filePath.getFileName().toString().substring(0, fileWithExtensionLength - 3) + "toc";
+        String fullFileName = filePath.getFileName().toString();
+        System.out.println("full file name: " + filePath);
+        String fileName = fullFileName.substring(0, fullFileName.lastIndexOf(".")) + ".toc";
+        System.out.println("new file: " + fileName);
 
         try (Stream<String> lines = Files.lines(filePath)) {
             Path path = Paths.get(filePath.getParent().toString() + "\\" + fileName);
@@ -43,11 +48,19 @@ public class InputOutputMain {
             newFile = Files.createFile(Paths.get(filePath.getParent().toString() + "\\" + fileName)).toFile();
 
             lines.forEach(e -> {
-                String[] wordsInEachLIne = e.split(delimiter);
+                String[] wordsInEachLIne = e.split("\\W+");
                 for (String element : wordsInEachLIne) {
-                    map.put(element, lineCounter.get());
+                    int counter = lineCounter.intValue();
+
+                    if (map.containsKey(element)) {
+                        map.get(element).add(counter);
+                    } else {
+                        Set<Integer> valueSet = new HashSet<>();
+                        valueSet.add(counter);
+                        map.put(element, valueSet);
+                    }
                 }
-                lineCounter.incrementAndGet();
+                lineCounter.increment();
             });
 
         } catch (IOException e) {
@@ -56,8 +69,8 @@ public class InputOutputMain {
 
 
         while (!map.isEmpty()) {
-            Map.Entry<String, Integer> entry = map.pollFirstEntry();
-            String text = entry.getKey() + ":" + entry.getValue() + " ";
+            Map.Entry<String, Set<Integer>> entry = map.pollFirstEntry();
+            String text = entry.getKey() + ":" + entry.getValue().toString() + " ";
             try {
                 Files.write(newFile.toPath(), text.getBytes(), StandardOpenOption.APPEND);
             } catch (IOException e) {
@@ -73,7 +86,6 @@ public class InputOutputMain {
             while ((line = br.readLine()) != null) {
                 System.out.println(line);
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -119,15 +131,14 @@ public class InputOutputMain {
         File file = new File("C:\\Users\\mikim\\IdeaProjects\\Java_Education\\test.txt");
         System.out.println("Text file is: ");
         printFile(file);
-        File newFile = produceTocFile(file, " ");
+        File newFile = produceTocFile(file);
         System.out.println("\nResult file is: ");
         printFile(newFile);
 
 
         String input = "+1234adsfa-3422+342. -323/+323.0 -231dfa23424// -324 -+ - +";
         System.out.println("\nString input is: '" + input + "'");
-        System.out.println("Extract all decimal Integers with find(): " +
-                extractAllIntegers1(input));
+        System.out.println("Extract all decimal Integers with find(): " + extractAllIntegers1(input));
         System.out.println("Extract all decimal Integers with split(): " + extractAllIntegers2(input));
     }
 }
