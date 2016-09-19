@@ -9,69 +9,27 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.file.Files;
+
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
-import java.util.stream.Stream;
 
 /**
  * Created by mikim on 2016-09-05.
  */
 public class Main {
-
-    public static void blockingQueue(File file, String keyword) {
-        /*
-        Ch 10.10. Use a blocking queue for processing files in a dir. One thread walks the file tree and
-         inserts the files into a queue. Several threads remove the files and search each one for a given keyword,
-         printing out any matches. When the producer is done, put dummy file into the queue.
-         */
-
-        BlockingQueue<Path> blockingQueue = new LinkedBlockingDeque<>();
-        Runnable enqueueTask = () -> {
-            try {
-                Stream<Path> paths = Files.walk(file.toPath());
-                paths.forEach(blockingQueue::add);
-
-                Path dummy = Paths.get("C:\\Users\\mikim\\IdeaProjects\\Java_Education\\dummy.txt");
-
-                if (Files.exists(dummy)) Files.delete(dummy);
-                blockingQueue.add(Files.createFile(dummy));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        };
-        Runnable dequeueTask = () -> {
-
-            try {
-                String path = null;
-                while (!(path = blockingQueue.take().getFileName().toString()).equals("dummy.txt")) {
-                    if (path.contains(keyword)) System.out.println(path);
-                    else if (path.equals("dummy.txt")) return;
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        };
-
-        Executor exec = Executors.newCachedThreadPool();
-        exec.execute(enqueueTask);
-        for (int i = 0; i < 5; i++) exec.execute(dequeueTask);
-        ForkJoinPool.commonPool().awaitQuiescence(10, TimeUnit.SECONDS);
-    }
-
     public static CompletableFuture<String> readPage(String page) {
-        return CompletableFuture.supplyAsync(() -> page);
+        return CompletableFuture.completedFuture(page);
     }
 
     public static List<URL> getLinks(String page) {
-        Document doc = null;
+
+        Document doc;
         try {
             doc = Jsoup.connect(page).get();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
 
         Elements links = doc.select("a[href]"); // a with href
@@ -81,32 +39,46 @@ public class Main {
             try {
                 if (!absHref.isEmpty()) urls.add(new URL(link.attr("abs:href")));
             } catch (MalformedURLException e) {
-                e.printStackTrace();
+                throw new RuntimeException(e);
             }
         }
         return urls;
     }
 
-    public static void DisplayAllLinks(String webpage) {
+    public static void DisplayAllLinks(String webPage) {
         /*
         Ch 10.24. Ask the user for a URL and reads the web page at that URL, and displays all the links
          */
-        CompletableFuture<String> contents = readPage(webpage);
-        CompletableFuture<List<URL>> links = contents.thenApply(Main::getLinks);
-        links.thenAccept(System.out::println);
+        CompletableFuture<String> contents = readPage(webPage);
+        contents.thenApply(Main::getLinks).thenAccept(System.out::println);
 
         ForkJoinPool.commonPool().awaitQuiescence(10, TimeUnit.SECONDS);
     }
 
-    public static void main(String[] args) {
-
+    public static void main(String[] args) throws InterruptedException{
         File file = new File("C:\\Users\\mikim\\IdeaProjects");
-        System.out.println("BlockingQueue:");
-        blockingQueue(file, "java");
+        String keyword = "java";
+        final int DEQUE_THREADS = 5;
+        final int ENQUE_THREADS = 1;
+        BlockingQueue<String> blockingQueue = new LinkedBlockingQueue<>();
+        CountDownLatch latch = new CountDownLatch(DEQUE_THREADS + ENQUE_THREADS);
+        ExecutorService executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+                30L, TimeUnit.SECONDS,
+                new SynchronousQueue<>());
+        EnqueueTask enqueueTask1 = new EnqueueTask(file, blockingQueue, latch);
+        executor.execute(enqueueTask1);
 
-        System.out.println("\nDisplay all links:");
+        DequeueTask dequeueTask1 = new DequeueTask(keyword, blockingQueue, latch);
+        for (int i = 0 ; i < DEQUE_THREADS; i++) {
+            executor.execute(dequeueTask1);
+        }
+
+        latch.await();
+        executor.shutdown();
+        System.out.println("Finished all threads");
+
+        System.out.println("Display all Links:");
         String webPage = "https://www.yahoo.com";
         DisplayAllLinks(webPage);
-
     }
 }
